@@ -1,0 +1,66 @@
+diff --git a/Makefile.am b/Makefile.am
+index 042384a..9dfaf7d 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -1,4 +1,5 @@
+ bin_PROGRAMS=	scrypt
++lib_LIBRARIES=  libscrypt.a
+ noinst_PROGRAMS= tests/valgrind/potential-memleaks
+ dist_man_MANS=$(scrypt_man_MANS)
+ 
+@@ -43,6 +44,47 @@ scrypt_SOURCES=		main.c					\
+ 			libcperciva/util/warnp.h		\
+ 			scrypt_platform.h
+ 
++libscrypt_a_CFLAGS=		-fPIC
++libscrypt_a_SOURCES=	libcperciva/alg/sha256.c		\
++			libcperciva/cpusupport/cpusupport_x86_aesni.c \
++			libcperciva/cpusupport/cpusupport_x86_sse2.c \
++			libcperciva/crypto/crypto_aes.c		\
++			libcperciva/crypto/crypto_aesctr.c	\
++			libcperciva/crypto/crypto_entropy.c	\
++			libcperciva/util/asprintf.c		\
++			libcperciva/util/entropy.c		\
++			libcperciva/util/getopt.c		\
++			libcperciva/util/humansize.c		\
++			libcperciva/util/insecure_memzero.c	\
++			libcperciva/util/readpass.c		\
++			libcperciva/util/warnp.c		\
++			lib/crypto/crypto_scrypt.c		\
++			lib/crypto/crypto_scrypt_smix.c		\
++			lib/scryptenc/scryptenc.c		\
++			lib/scryptenc/scryptenc_cpuperf.c	\
++			lib/util/memlimit.c			\
++			lib/crypto/crypto_scrypt.h		\
++			lib/crypto/crypto_scrypt_smix.h		\
++			lib/crypto/crypto_scrypt_smix_sse2.h	\
++			lib/scryptenc/scryptenc.h		\
++			lib/scryptenc/scryptenc_cpuperf.h	\
++			lib/util/memlimit.h			\
++			libcperciva/alg/sha256.h		\
++			libcperciva/cpusupport/cpusupport.h	\
++			libcperciva/crypto/crypto_aes.h		\
++			libcperciva/crypto/crypto_aes_aesni.h	\
++			libcperciva/crypto/crypto_aesctr.h	\
++			libcperciva/crypto/crypto_entropy.h	\
++			libcperciva/util/asprintf.h		\
++			libcperciva/util/entropy.h		\
++			libcperciva/util/getopt.h		\
++			libcperciva/util/humansize.h		\
++			libcperciva/util/insecure_memzero.h	\
++			libcperciva/util/readpass.h		\
++			libcperciva/util/sysendian.h		\
++			libcperciva/util/warnp.h		\
++			scrypt_platform.h
++
+ AM_CPPFLAGS=		-I$(srcdir)/libcperciva/alg		\
+ 			-I$(srcdir)/libcperciva/cpusupport	\
+ 			-I$(srcdir)/libcperciva/crypto		\
+@@ -54,6 +96,7 @@ AM_CPPFLAGS=		-I$(srcdir)/libcperciva/alg		\
+ 			-D_POSIX_C_SOURCE=200809L
+ 
+ scrypt_LDADD=		libcperciva_aesni.a libscrypt_sse2.a
++libscrypt_a_LIBADD=	libcperciva_aesni.a libscrypt_sse2.a
+ scrypt_man_MANS=	scrypt.1
+ 
+ cpusupport-config.h:
