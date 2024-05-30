@@ -80,7 +80,6 @@ PHP_FUNCTION(firebase_scrypt)
     zend_string* zstr_key_decoded;
     zend_string* zstr_salt_decoded;
     zend_string* zstr_result;
-    zend_string* zstr_saltsep_default = zend_string_init("Bw==",sizeof("Bw==")-1,0);
 
     const char* passwd;
     size_t passwd_len;
@@ -88,13 +87,13 @@ PHP_FUNCTION(firebase_scrypt)
     size_t saltbase_len;
     const char* key;
     size_t key_len;
-    zend_string* zstr_saltsep = zstr_saltsep_default;
+    zend_string* zstr_saltsep;
     zend_long rounds = 8;
     zend_long memcost = 14;
 
     if (zend_parse_parameters(
             ZEND_NUM_ARGS(),
-            "sss|Sll",
+            "sssS|ll",
             &passwd, &passwd_len,
             &saltbase, &saltbase_len,
             &key, &key_len,
@@ -102,7 +101,6 @@ PHP_FUNCTION(firebase_scrypt)
             &rounds,
             &memcost) == FAILURE)
     {
-        zend_string_release(zstr_saltsep_default);
         return;
     }
 
@@ -150,7 +148,6 @@ PHP_FUNCTION(firebase_scrypt)
         (uint32_t)rounds,
         (uint32_t)memcost);
 
-    zend_string_release(zstr_saltsep_default);
     zend_string_release(zstr_saltbase_decoded);
     zend_string_release(zstr_saltsep_decoded);
     zend_string_release(zstr_key_decoded);
