@@ -21,10 +21,12 @@ static PHP_RSHUTDOWN_FUNCTION(firebase_scrypt);
 
 /* PHP userspace functions */
 static PHP_FUNCTION(firebase_scrypt);
+static PHP_FUNCTION(firebase_scrypt_verify);
 
 /* Function entries */
 static zend_function_entry php_firebase_scrypt_functions[] = {
     PHP_FE(firebase_scrypt,arginfo_firebase_scrypt)
+    PHP_FE(firebase_scrypt_verify,arginfo_firebase_scrypt_verify)
     {NULL, NULL, NULL}
 };
 
@@ -148,10 +150,10 @@ PHP_FUNCTION(firebase_scrypt)
         (uint32_t)rounds,
         (uint32_t)memcost);
 
-    zend_string_release(zstr_saltbase_decoded);
-    zend_string_release(zstr_saltsep_decoded);
-    zend_string_release(zstr_key_decoded);
     zend_string_release(zstr_salt_decoded);
+    zend_string_release(zstr_saltsep_decoded);
+    zend_string_release(zstr_saltbase_decoded);
+    zend_string_release(zstr_key_decoded);
 
     if (result != 0) {
         zend_throw_error(NULL,"firebase_scrypt: Failed to encrypt password");
@@ -161,4 +163,120 @@ PHP_FUNCTION(firebase_scrypt)
     zstr_result = php_base64_encode(outbuf,ZSTR_LEN(zstr_key_decoded));
 
     RETURN_STR(zstr_result);
+}
+
+PHP_FUNCTION(firebase_scrypt_verify)
+{
+    int result;
+    uint8_t* outbuf;
+    size_t n;
+    size_t count;
+    zend_string* zstr_hash_decoded;
+    zend_string* zstr_saltbase_decoded;
+    zend_string* zstr_saltsep_decoded;
+    zend_string* zstr_key_decoded;
+    zend_string* zstr_salt_decoded;
+
+    const char* passwd;
+    size_t passwd_len;
+    const char* hash;
+    size_t hash_len;
+    const char* saltbase;
+    size_t saltbase_len;
+    const char* key;
+    size_t key_len;
+    zend_string* zstr_saltsep;
+    zend_long rounds = 8;
+    zend_long memcost = 14;
+
+    if (zend_parse_parameters(
+            ZEND_NUM_ARGS(),
+            "ssssS|ll",
+            &passwd, &passwd_len,
+            &hash, &hash_len,
+            &saltbase, &saltbase_len,
+            &key, &key_len,
+            &zstr_saltsep,
+            &rounds,
+            &memcost) == FAILURE)
+    {
+        return;
+    }
+
+    zstr_hash_decoded = php_base64_decode(hash,hash_len);
+    if (zstr_hash_decoded == NULL) {
+        zend_throw_error(zend_ce_value_error,"Argument 'hash' is not a properly-formatted base64 string");
+        return;
+    }
+    zstr_key_decoded = php_base64_decode(key,key_len);
+    if (zstr_key_decoded == NULL) {
+        zend_throw_error(zend_ce_value_error,"Argument 'key' is not a properly-formatted base64 string");
+        return;
+    }
+    zstr_saltbase_decoded = php_base64_decode(saltbase,saltbase_len);
+    if (zstr_saltbase_decoded == NULL) {
+        zend_throw_error(zend_ce_value_error,"Argument 'salt' is not a properly-formatted base64 string");
+        return;
+    }
+    zstr_saltsep_decoded = php_base64_decode_str(zstr_saltsep);
+    if (zstr_saltsep_decoded == NULL) {
+        zend_throw_error(zend_ce_value_error,"Argument 'salt_separator' is not a properly-formatted base64 string");
+        return;
+    }
+
+    zstr_salt_decoded = zend_string_alloc(
+        ZSTR_LEN(zstr_saltbase_decoded) + ZSTR_LEN(zstr_saltsep_decoded),
+        0);
+    memcpy(
+        ZSTR_VAL(zstr_salt_decoded),
+        ZSTR_VAL(zstr_saltbase_decoded),
+        ZSTR_LEN(zstr_saltbase_decoded));
+    memcpy(
+        ZSTR_VAL(zstr_salt_decoded) + ZSTR_LEN(zstr_saltbase_decoded),
+        ZSTR_VAL(zstr_saltsep_decoded),
+        ZSTR_LEN(zstr_saltsep_decoded));
+    ZSTR_VAL(zstr_salt_decoded)
+        [ZSTR_LEN(zstr_saltsep_decoded) + ZSTR_LEN(zstr_saltbase_decoded)] = 0;
+
+    n = ZSTR_LEN(zstr_key_decoded);
+    outbuf = alloca(n + 1);
+    outbuf[n] = 0;
+
+    result = scryptenc_buf_saltlen(
+        ZSTR_VAL(zstr_key_decoded),
+        ZSTR_LEN(zstr_key_decoded),
+        outbuf,
+        passwd,
+        passwd_len,
+        ZSTR_VAL(zstr_salt_decoded),
+        ZSTR_LEN(zstr_salt_decoded),
+        (uint32_t)rounds,
+        (uint32_t)memcost);
+
+    zend_string_release(zstr_salt_decoded);
+    zend_string_release(zstr_saltsep_decoded);
+    zend_string_release(zstr_saltbase_decoded);
+    zend_string_release(zstr_key_decoded);
+    zend_string_release(zstr_hash_decoded);
+
+    if (result != 0) {
+        zend_throw_error(NULL,"firebase_scrypt: Failed to encrypt password");
+        return;
+    }
+
+    /* Perform a time-safe comparison of the hash strings. */
+    count = 0;
+    for (size_t i = 0;i < n;++i) {
+        char a = outbuf[i];
+        char b = (i < ZSTR_LEN(zstr_hash_decoded)) ? ZSTR_VAL(zstr_hash_decoded)[i] : ~a;
+
+        count += (a == b);
+    }
+
+    /* Make sure the match is exact. */
+    if (ZSTR_LEN(zstr_hash_decoded) != n) {
+        RETURN_FALSE;
+    }
+
+    RETURN_BOOL(count == n);
 }

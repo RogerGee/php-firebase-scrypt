@@ -56,7 +56,7 @@ Hashes a password using the Firebase `scrypt` algorithm.
 
 #### Signature
 
-	string firebase_scrypt(string $passwd,string $salt,string $key,string $salt_separator,int $rounds = 8,int $memcost = 14) : string
+	string firebase_scrypt(string $passwd,string $salt,string $key,string $salt_separator,int $rounds = 8,int $memcost = 14)
 
 #### Parameters
 
@@ -71,3 +71,36 @@ Hashes a password using the Firebase `scrypt` algorithm.
 
 > Note: many of these parameters correspond to the Firebase project's hash parameters. See [the README](https://github.com/firebase/scrypt/blob/master/README.md) of the `firebase / scrypt` project for more.
 
+### `firebase_scrypt_verify`
+
+Verifies a password against an existing password hash using the Firebase `scrypt` algorithm.
+
+This function is functionally equivalent to:
+
+~~~php
+function firebase_scrypt_verify($candidate_passwd,$hash,/* ... */)
+  $candidate_hash = firebase_scrypt($candidate_passwd,/* ... */);
+
+  return ($hash == $candidate_hash);
+}
+~~~
+
+> Note that `firebase_scrypt_verify` performs a time-safe comparison operation. This method should be preferred over manually comparing password hashes.
+
+#### Signature
+
+	bool firebase_scrypt_verify(string $passwd,string $hash,string $salt,string $key,string $salt_separator,int $rounds = 8,int $memcost = 14)
+
+#### Parameters
+
+| Name             | Type     | Meaning                                             | Optional? |
+| ---------------- | -------- | --------------------------------------------------- | --------- |
+| `passwd`         | `string` | The password to hash                                | no        |
+| `hash`           | `string` | The existing password hash against which to compare | no        |
+| `salt`           | `string` | The password salt to use in the hash                | no        |
+| `key`            | `string` | The encryption key to use in the hash               | no        |
+| `salt_separator` | `string` | The salt separator to use in the hash               | no        |
+| `rounds`         | `int`    | The rounds parameter                                | yes       |
+| `memcost`        | `int`    | The mem_cost parameter                              | yes       |
+
+> Note: many of these parameters correspond to the Firebase project's hash parameters. See [the README](https://github.com/firebase/scrypt/blob/master/README.md) of the `firebase / scrypt` project for more.
