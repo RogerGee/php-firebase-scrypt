@@ -16,6 +16,6 @@
 /* Extension definitions */
 
 #define PHP_FIREBASE_SCRYPT_EXTNAME "firebase_scrypt"
-#define PHP_FIREBASE_SCRYPT_EXTVER  "1.0.0-dev"
+#define PHP_FIREBASE_SCRYPT_EXTVER  "1.0.0"
 
 #endif
