@@ -1,5 +1,5 @@
 diff --git a/Makefile.am b/Makefile.am
-index 042384a..df3145e 100644
+index 042384a..8300649 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -1,4 +1,5 @@
@@ -56,3 +56,17 @@ index 042384a..df3145e 100644
  AM_CPPFLAGS=		-I$(srcdir)/libcperciva/alg		\
  			-I$(srcdir)/libcperciva/cpusupport	\
  			-I$(srcdir)/libcperciva/crypto		\
+@@ -63,11 +105,11 @@ CLEANFILES=	cpusupport-config.h cpusupport-config.h.tmp
+ 
+ noinst_LIBRARIES=	libcperciva_aesni.a
+ libcperciva_aesni_a_SOURCES=	libcperciva/crypto/crypto_aes_aesni.c
+-libcperciva_aesni_a_CFLAGS=`. ./cpusupport-config.h; echo $${CFLAGS_X86_AESNI}`
++libcperciva_aesni_a_CFLAGS=-fPIC `. ./cpusupport-config.h; echo $${CFLAGS_X86_AESNI}`
+ 
+ noinst_LIBRARIES+=	libscrypt_sse2.a
+ libscrypt_sse2_a_SOURCES=	lib/crypto/crypto_scrypt_smix_sse2.c
+-libscrypt_sse2_a_CFLAGS=`. ./cpusupport-config.h; echo $${CFLAGS_X86_SSE2}`
++libscrypt_sse2_a_CFLAGS=-fPIC `. ./cpusupport-config.h; echo $${CFLAGS_X86_SSE2}`
+ 
+ EXTRA_DIST = \
+ 	COPYRIGHT						\
